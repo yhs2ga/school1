@@ -1,36 +1,30 @@
 import streamlit as st
 import pandas as pd
-import pydeck as pdk
+import plotly.express as px
 
-# 데이터 불러오기
+# 데이터 로드
 @st.cache_data
 def load_data():
     return pd.read_csv("Delivery.csv")
 
 df = load_data()
 
-st.title("배달 위치 시각화")
+st.title("배달 위치 시각화 (Plotly 사용)")
 
-# 지도 시각화
-st.subheader("기본 지도 표시")
-st.map(df[['Latitude', 'Longitude']])
-
-# pydeck 고급 지도
-st.subheader("고급 시각화 (Pydeck)")
-layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=df,
-    get_position='[Longitude, Latitude]',
-    get_radius=100,
-    get_color='[200, 30, 0, 160]',
-    pickable=True
-)
-
-view_state = pdk.ViewState(
-    latitude=df["Latitude"].mean(),
-    longitude=df["Longitude"].mean(),
+# Plotly 지도
+fig = px.scatter_mapbox(
+    df,
+    lat="Latitude",
+    lon="Longitude",
+    hover_name="Num",
     zoom=11,
-    pitch=0
+    height=600
 )
 
-st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state))
+# 지도 스타일 설정
+fig.update_layout(
+    mapbox_style="open-street-map",
+    margin={"r":0, "t":0, "l":0, "b":0}
+)
+
+st.plotly_chart(fig, use_container_width=True)
