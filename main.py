@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from sklearn.cluster import KMeans
 
-# 데이터 로딩 및 전처리
 @st.cache_data
 def load_data():
     df = pd.read_csv("Delivery.csv")
@@ -12,54 +11,49 @@ def load_data():
 
 df = load_data()
 
-st.title("📍 배달 위치 군집 시각화 (고급 분류 강조)")
+st.title("📍 배달 위치 클러스터링 시각화 (중심점 포함)")
 
-# 클러스터 수 선택
-k = st.slider("클러스터 수 (K)", min_value=2, max_value=10, value=4)
+# 클러스터 수 및 지도 줌 설정
+k = st.slider("클러스터 수 선택", 2, 10, 4)
+zoom_level = st.slider("지도 줌 수준", 1, 15, 11)
 
-# KMeans 적용
+# KMeans 군집화
 kmeans = KMeans(n_clusters=k, random_state=42)
 df["cluster"] = kmeans.fit_predict(df[["lat", "lon"]])
+
+# 중심점 좌표 가져오기
 centroids = pd.DataFrame(kmeans.cluster_centers_, columns=["lat", "lon"])
-centroids["cluster"] = range(k)
+centroids["cluster"] = [f"C{i}" for i in range(k)]
 
-# 군집별로 필터링할 수 있도록 selectbox 추가
-selected_cluster = st.selectbox("특정 클러스터만 보기 (전체 보기: '전체')", ["전체"] + list(map(str, range(k))))
-if selected_cluster != "전체":
-    df = df[df["cluster"] == int(selected_cluster)]
-
-# 색상 팔레트 고정
+# Plotly 지도 시각화
 color_map = px.colors.qualitative.Set2
-
-# 지도 시각화
 fig = px.scatter_mapbox(
     df,
     lat="lat",
     lon="lon",
     color=df["cluster"].astype(str),
     hover_name="Num",
-    zoom=11,
+    zoom=zoom_level,
     height=650,
-    size_max=15,
-    opacity=0.75,
-    color_discrete_sequence=color_map,
+    opacity=1.0,
+    color_discrete_sequence=color_map
 )
 
-# 군집 중심점 표시 (크고 흰색)
+# 중심점 표시 (별 모양 + 텍스트 레이블)
 fig.add_scattermapbox(
     lat=centroids["lat"],
     lon=centroids["lon"],
     mode="markers+text",
-    marker=dict(size=22, color="white", opacity=0.9, symbol="star"),
-    text=[f"Cluster {i}" for i in range(k)],
+    marker=dict(size=20, color="white", symbol="star"),
+    text=centroids["cluster"],
     textposition="top center",
-    name="Cluster Center"
+    name="Cluster Centers"
 )
 
-# 스타일 적용
+# 스타일 및 레이아웃
 fig.update_layout(
-    mapbox_style="carto-positron",
-    margin={"r":0, "t":40, "l":0, "b":0},
+    mapbox_style="carto-darkmatter",  # 흐림 방지 + 고대비
+    margin={"r": 0, "t": 40, "l": 0, "b": 0},
     legend_title_text="클러스터 번호"
 )
 
