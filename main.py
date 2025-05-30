@@ -50,9 +50,9 @@ fig.add_scattermapbox(
     name="Cluster Centers"
 )
 
-# 스타일 및 레이아웃
+# 스타일 및 레이아웃 (밝은 지도 배경으로 변경)
 fig.update_layout(
-    mapbox_style="carto-darkmatter",  # 흐림 방지 + 고대비
+    mapbox_style="open-street-map",  # 밝은 스타일로 변경
     margin={"r": 0, "t": 40, "l": 0, "b": 0},
     legend_title_text="클러스터 번호"
 )
